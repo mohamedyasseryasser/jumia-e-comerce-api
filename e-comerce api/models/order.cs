@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using static Azure.Core.HttpHeader;
 
 namespace e_comerce_api.models
 {
@@ -18,11 +19,19 @@ namespace e_comerce_api.models
         public string PaymentStatus { get; set; }
         public string statue {  get; set; }
         [ForeignKey("Address")]
-        public int? address_id {  get; set; }
+         public int? address_id {  get; set; }
         [ForeignKey("customer")]
         public int? customer_id { get; set; }
         public customer? customer { get; set; }  
         public ICollection<SubOrder>? SubOrders { get; set; }=new List<SubOrder>();
         public address? Address { get; set; }
+        [ForeignKey("Coupon")]
+        public int? CouponId { get; set; }
+        public string AffiliateCode { get; set; }
+        [ForeignKey("Affiliate")]
+        public int? AffiliateId { get; set; }
+        public Affiliate? Affiliate { get; set; }
+        public  ICollection<AffiliateComession> AffiliateCommissions { get; set; } = new List<AffiliateComession>();
+        public Copons? Coupon { get; set; }
     }
 }

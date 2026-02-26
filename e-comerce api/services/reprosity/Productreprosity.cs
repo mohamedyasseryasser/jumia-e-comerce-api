@@ -13,16 +13,16 @@ namespace e_comerce_api.services.reprosity
 {
     public class Productreprosity:Iproductreprosity
     {
-        public Productreprosity(context context,Imagesreprosity imagesreprosity)
+        public Productreprosity(context context,Iimagesreprosity imagesreprosity)
         {
             Context = context;
             Imagesreprosity = imagesreprosity;
         }
         public context Context { get; }
-        public Imagesreprosity Imagesreprosity { get; }
+        public Iimagesreprosity Imagesreprosity { get; }
 
         //get product by id
-        public async Task<productresponsedto> getproductbyid(int productid,bool isincludedetails)
+        public async Task<productresponsedto> getproductbyid(int productid,bool isincludedetails=false)
         {
             try
             {
@@ -39,7 +39,7 @@ namespace e_comerce_api.services.reprosity
                     Include(p=>p.subcategory).
                     ThenInclude(c=>c.category)
                     .FirstOrDefaultAsync(p => (p.ProductId==productid)
-                    &&(p.isaveliable == true || isincludedetails == true));
+                    &&(p.isaveliable == true ));
 
                 if (exitproduct == null)
                     throw new Exception("this product is not found");
@@ -50,7 +50,7 @@ namespace e_comerce_api.services.reprosity
             }
             catch(Exception ex) 
             {
-                throw new Exception(ex.Message);
+                throw ;
             }
         }
         //get all products
@@ -111,50 +111,63 @@ namespace e_comerce_api.services.reprosity
             using var transaction =await Context.Database.BeginTransactionAsync();
             try
             {
+                decimal effectivePrice = dto.BasePrice;
+                int effectiveStock = dto.StockQuantity;
+
+                // If product has variants, get values from default variant
+                if (dto.HasVariants && dto.Variants != null && dto.Variants.Any())
+                {
+                    var defaultVariant = dto.Variants.FirstOrDefault(v => v.isdefalult);
+                    if (defaultVariant != null)
+                    {
+                        effectivePrice = defaultVariant.basicprice;
+                        effectiveStock = defaultVariant.stockquantity;
+                    }
+                }
                 //create product
-               
                 product product = new product { 
-                 basicprice=dto.BasePrice,
+                 basicprice=effectivePrice,
                  createdAt=DateTime.Now,
                  updatedAt=DateTime.Now,
                  discountpercentage=dto.DiscountPercentage,
-                 FinalPrice=((dto.BasePrice)-(dto.BasePrice*dto.DiscountPercentage)/100),
+                // FinalPrice=((dto.BasePrice)-(dto.BasePrice*dto.DiscountPercentage)/100),
                  Description=dto.Description,
                  isaveliable=true,
+                 Mainimageurl="",
                  Name=dto.Name,
                  seller_id=dto.SellerId,
                  sub_cat_id=dto.SubcategoryId,
-                 stockquantity=dto.StockQuantity,
-                 AverageRate=0,
+                 stockquantity=effectiveStock,
+               //  AverageRate=0,
                 }; 
                 Context.Products.Add(product);
                 await Context.SaveChangesAsync();
                 //create images product 
-                if (dto.MainImageFile != null)
-                {
-                    product.Mainimageurl = await Imagesreprosity.saveimageurl(dto.MainImageFile,EntityTyp.product,dto.Name);
-                }
+              //  if (dto.MainImageFile != null)
+                //{
+                  //  product.Mainimageurl = await Imagesreprosity.saveimageurl(dto.MainImageFile,EntityTyp.product,dto.Name);
+                //}
                 
-                if (dto.AdditionalImageFiles != null)
-                {
-                    foreach (var item in dto.AdditionalImageFiles)
-                    {
-                        var image = await Imagesreprosity.saveimageurl(item.Imagefile,EntityTyp.product,dto.Name);
-                        var productimage = new ProductImage
-                        {
-                            DisplayOrder = item.DisplayOrder,
-                            ImageUrl = image,
-                            ProductId=product.ProductId,
-                        };
-                        product.ProductImage.Add(productimage);
-                    }
-                }
+              //  if (dto.AdditionalImageFiles != null)
+                //{
+                  //  foreach (var item in dto.AdditionalImageFiles)
+                    //{
+                      //  var image = await Imagesreprosity.saveimageurl(item.Imagefile,EntityTyp.product,dto.Name);
+                        //var productimage = new ProductImage
+                        //{
+                          //  DisplayOrder = item.DisplayOrder,
+                            //ImageUrl = image,
+                            //ProductId=product.ProductId,
+                        //};
+                        //product.ProductImage.Add(productimage);
+                    //}
+                //}
                 //create attribute values
-                if (dto.AttributeValues!=null)
+                if (dto.AttributeValues!=null&&dto.AttributeValues.Any())
                 {
                     foreach (var item in dto.AttributeValues)
                     {
-
+                        item.ProductId = product.ProductId;
                         //validate attribute exit or not
                         var exitattribute = await Context.ProductAttributies.
                              FirstOrDefaultAsync(t => t.ProductAttriid == item.AttributeId );
@@ -176,7 +189,7 @@ namespace e_comerce_api.services.reprosity
                     }
                     await Context.SaveChangesAsync();
                     //add variant
-                    if (dto.HasVariants&&dto.Variants!=null)
+                    if (dto.HasVariants&&dto.Variants!=null&&dto.Variants.Any())
                     {
                         foreach( var item in dto.Variants)
                         {
@@ -185,29 +198,40 @@ namespace e_comerce_api.services.reprosity
                              discountpercentage=item.discountpercentage,
                              Description=item.Description,
                              basicprice=item.basicprice,
-                             FinalPrice=(item.basicprice-(item.basicprice*item.discountpercentage)/100),
+                            // FinalPrice=(item.basicprice-(item.basicprice*item.discountpercentage)/100),
                              isdefault=item.isdefalult,
                              Mainimageurl="",
                              stockquantity=item.stockquantity,
                              product_id=product.ProductId,
                              SKU=item.sku,
                              VariantName=item.VariantName,
-                            };
-                             //variant image 
-                            if (item.Imagefile!=null)
-                            {
-                              var imageurl = await Imagesreprosity.saveimageurl(item.Imagefile,EntityTyp.product,item.VariantName);
-                              variant.Mainimageurl = imageurl;
-                            }
-                            await Context.ProductVariants.AddAsync(variant);
+                            }; await Context.ProductVariants.AddAsync(variant);
                             await Context.SaveChangesAsync();
+                            //variant image 
+                            if (item.Imagefile != null)
+                            {
+                                try {
+                                    var imageurl = await Imagesreprosity.saveimageurl(item.Imagefile, EntityTyp.product, item.VariantName);
+                                    variant.Mainimageurl = imageurl;
+                                    await Context.SaveChangesAsync();
+
+                                }
+                                catch (Exception ex)
+                                {
+                                    // Log the error but continue processing
+                                    Console.WriteLine($"Error saving variant image: {ex.Message}");
+                                    // You might want to use a proper logging mechanism here
+                                }
+                            }
                             //variant attribute
-                            if (item.productVariantAttributeDtos != null)
+                            if (item.productVariantAttributeDtos != null&&item.productVariantAttributeDtos.Any())
                             {
                                 var variantattributes=await Context.VariantAttributes.ToListAsync();
                                 foreach (var attr in item.productVariantAttributeDtos) {
                                     var exitattribute = variantattributes.
                                         FirstOrDefault(t=>t.ProductVariantAttrid==attr.VariantAttributeId);
+                                    if (exitattribute == null)
+                                        throw new Exception("this attribute si not found");
                                     var possiblevaluearray = exitattribute.possiblevalue.Split(',');
                                     if (!possiblevaluearray.Contains(attr.AttributeValue, StringComparer.OrdinalIgnoreCase))
                                     {
@@ -216,7 +240,9 @@ namespace e_comerce_api.services.reprosity
                                     var newvariantattribute = new productVariantAttribute {
                                         AttributeName=attr.AttributeName,
                                         AttributeValue=attr.AttributeValue,
-                                        variatn_id=variant.ProductVariantId,  
+                                        variatn_id=attr.VariantId,
+                                        possiblevalue=attr.possiblevalue,
+                                      
                                     };
                                     await Context.VariantAttributes.AddAsync(newvariantattribute);
                                 }
@@ -232,11 +258,9 @@ namespace e_comerce_api.services.reprosity
             catch (Exception ex) 
             {
                 await transaction.RollbackAsync();
-                throw new Exception(ex.Message);
+                throw ;
             }     
         }
-        //validate attributevalue
-        
         //maping productdto
         public productresponsedto mapresponseproduct(product product,bool isincludedetails)
         {
@@ -245,21 +269,21 @@ namespace e_comerce_api.services.reprosity
                 Description = product.Description,
                 DiscountPercentage=product.discountpercentage,
                 BasePrice=product.basicprice,
-                CategoryId=product.subcategory.category.CategoryId,
+                CategoryId=product.subcategory?.category?.CategoryId??0,
                FinalPrice=product.FinalPrice,            
                //  FinalPrice=(product.basicprice-((product.discountpercentage*product.basicprice)/100)),
                 CreatedAt=product.createdAt,
                 Name=product.Name,
                 IsAvailable=product.isaveliable,
-                SellerId=product.seller.Sellerid,
+                SellerId=product.seller?.Sellerid??0,
                 AverageRating=product.AverageRate,
                 ProductId=product.ProductId,
                 UpdatedAt=product.updatedAt,
-                SellerName=product.seller.user.UserName,
-                SubcategoryId=product.subcategory.SbuCatId,
+                SellerName=product.seller?.user?.UserName,
+                SubcategoryId=product.subcategory?.SbuCatId??0,
                 StockQuantity=product.stockquantity,
-                CategoryName=product.subcategory.category.Name,
-                SubcategoryName=product.subcategory.Name,
+                CategoryName=product.subcategory?.category?.Name,
+                SubcategoryName=product.subcategory?.Name,
                 MainImageUrl=product.Mainimageurl,
                 RatingCount=product.ratings.Count(),
                 ReviewCount=product.ProductViews.Count(),
@@ -329,16 +353,16 @@ namespace e_comerce_api.services.reprosity
                 switch (sortby.ToLower())
                 {
                     case "name":
-                        products.OrderBy(p=>p.Name).ToList();
+                        products = products.OrderBy(p => p.Name);//.ToList();
                         break;
                     case "finalprice":
-                        products.OrderBy(p => p.FinalPrice).ToList();
+                      products=  products.OrderBy(p => p.FinalPrice);//.ToList();
                         break;
                     case "stockquantity":
-                        products.OrderBy(p => p.stockquantity).ToList();
+                       products= products.OrderBy(p => p.stockquantity);//.ToList();
                         break;
                     case "isavaliable":
-                        products.OrderBy(p => p.isaveliable).ToList();
+                    products=    products.OrderBy(p => p.isaveliable);//.ToList();
                         break;
                     default:
                         break;
@@ -349,16 +373,16 @@ namespace e_comerce_api.services.reprosity
                 switch (sortby.ToLower())
                 {
                     case "name":
-                        products.OrderByDescending(p => p.Name).ToList();
+                       products= products.OrderByDescending(p => p.Name);//.ToList();
                         break;
                     case "finalprice":
-                        products.OrderByDescending(p => p.FinalPrice).ToList();
+                      products=  products.OrderByDescending(p => p.FinalPrice);//.ToList();
                         break;
                     case "stockquantity":
-                        products.OrderByDescending(p => p.stockquantity).ToList();
+                      products=  products.OrderByDescending(p => p.stockquantity);//.ToList();
                         break;
                     case "isavaliable":
-                        products.OrderByDescending(p => p.isaveliable).ToList();
+                   products=     products.OrderByDescending(p => p.isaveliable);///.ToList();
                         break;
                     default:
                         break;
@@ -413,20 +437,27 @@ namespace e_comerce_api.services.reprosity
                     throw new Exception("there are not mainimageurl");
                 }
                 //add product image
-                if (productdto.AdditionalImageFiles != null)
+                if (productdto.AdditionalImageFiles != null && productdto.AdditionalImageFiles.Any())
                 {
                     foreach (var image in productdto.AdditionalImageFiles)
                     {
-                        var imagepath = await Imagesreprosity.saveimageurl(image.Imagefile, EntityTyp.product, $"{product.Name} images:{image.DisplayOrder}");
-                        var productimage = new ProductImage
-                        {
-                            DisplayOrder = image.DisplayOrder,
-                            ImageUrl = imagepath,
-                            ProductId = product.ProductId,
-                        };
-                        product.ProductImage.Add(productimage);
+                        await addimagetoproductimages(image, product.ProductId);
                     }
                 }
+                // if (productdto.AdditionalImageFiles != null)
+                //{
+                //  foreach (var image in productdto.AdditionalImageFiles)
+                //{
+                //  var imagepath = await Imagesreprosity.saveimageurl(image, EntityTyp.product, $"{product.Name} images:{image.DisplayOrder}");
+                //var productimage = new ProductImage
+                //{
+                //  DisplayOrder = image.DisplayOrder,
+                // ImageUrl = imagepath,
+                //ProductId = product.ProductId,
+                //};
+                //product.ProductImage.Add(productimage);
+                //}
+                //}
                 //update product image deleted
                 if (productdto.productimagedeleted != null)
                 {
@@ -452,12 +483,13 @@ namespace e_comerce_api.services.reprosity
                         var newattributevalue = new ProductAttributiesValue
                         {
                             AttributeId = value.AttributeId,
-                            ProductId = value.ProductId,
+                            ProductId = product.ProductId,
                             Value = value.Value
                         };
-                        await Context.ProductAttributeValues.AddAsync(newattributevalue);
+                        Context.ProductAttributeValues.Add(newattributevalue);
                     }
                 }
+                await Context.SaveChangesAsync();
                 //product variant
                 if (productdto.HasVariants&&productdto.Variants!=null)
                 {
@@ -471,9 +503,16 @@ namespace e_comerce_api.services.reprosity
                     .Contains((int)v.ProductVariantId)).ToList();
                     foreach (var item in variantremoved)
                     {
-                        item.isaveliable = false;
+                        if (string.IsNullOrEmpty(item.Mainimageurl)&&item.Mainimageurl!=null&&item.Mainimageurl!="")
+                        {
+                            
+                            //var image = item.Mainimageurl;
+                            await  Imagesreprosity.deleteimage(item.Mainimageurl);
+                        }
+                        //   item.isaveliable = false;
+                         Context.ProductVariants.Remove(item);
                     }
-                    await Context.SaveChangesAsync();
+                    //await Context.SaveChangesAsync();
 
                     //update or create variants
                     foreach (var variant in productdto.Variants)
@@ -522,44 +561,65 @@ namespace e_comerce_api.services.reprosity
 
                             var addvariant = new productVariant
                             {
+                                product=product,
                                 isaveliable = true,
-                                discountpercentage = variant.DiscountPercentage,
-                                Description = variant.Description,
+                                discountpercentage = variant.DiscountPercentage ,
+                                Description = variant.Description ?? string.Empty,
                                 basicprice = variant.Price,
-                                FinalPrice = (variant.Price - (variant.Price * variant.DiscountPercentage) / 100),
+                                FinalPrice = variant.Price - (variant.Price * (variant.DiscountPercentage ) / 100m),
                                 isdefault = variant.IsDefault,
-                                Mainimageurl = "",
+                                Mainimageurl = string.Empty,
                                 stockquantity = variant.StockQuantity,
                                 product_id = product.ProductId,
-                                SKU = variant.Sku,
-                                VariantName = variant.VariantName,
-                            };
+                                SKU = variant.Sku ?? string.Empty,
+                                VariantName = variant.VariantName ?? string.Empty,
+                            }; // Context.ProductVariants.Add(addvariant);
+
+                            try
+                            {
+                                Context.ProductVariants.Add(addvariant);
+                                await Context.SaveChangesAsync();
+                            }
+                            catch (DbUpdateException dbEx)
+                            {
+                                var inner = dbEx.InnerException?.Message;
+                                // سجل الرسالة أو ارجعها للـ client أثناء التطوير
+                                throw new Exception($"DB Update Error: {dbEx.Message} - Inner: {inner}");
+                            }
+                            catch (Exception ex)
+                            {
+                                throw;
+                            }
+
+
+                            //var e = addvariant;
+                            //await Context.SaveChangesAsync();
                             //variant image 
                             if (variant.VariantImage != null)
                             {
                                 var imageurl = await Imagesreprosity.saveimageurl(variant.VariantImage, EntityTyp.product, variant.VariantName);
                                 addvariant.Mainimageurl = imageurl;
                             }
-                            await Context.ProductVariants.AddAsync(addvariant);
-                            await Context.SaveChangesAsync();
+                      
                             //variant attribute
                             if (variant.VariantAttributes != null)
                             {
-                                var variantattributes = await Context.VariantAttributes.ToListAsync();
+                                //var variantattributes = await Context.VariantAttributes.ToListAsync();
                                 foreach (var attr in variant.VariantAttributes)
                                 {
-                                    var exitattribute = variantattributes.
-                                        FirstOrDefault(t => t.ProductVariantAttrid == attr.VariantAttributeId);
-                                    var possiblevaluearray = exitattribute.possiblevalue.Split(',');
+                                  //  var exitattribute = variantattributes.
+                                    //    FirstOrDefault(t => t.ProductVariantAttrid == attr.VariantAttributeId);
+                                    var possiblevaluearray = attr.possiblevalue.Split(',');
                                     if (!possiblevaluearray.Contains(attr.AttributeValue, StringComparer.OrdinalIgnoreCase))
                                     {
-                                        throw new Exception($"Invalid value. Allowed values: {string.Join(", ", exitattribute.possiblevalue)}");
+                                        throw new Exception($"Invalid value. Allowed values: {string.Join(", ", attr.possiblevalue)}");
                                     }
                                     var newvariantattribute = new productVariantAttribute
                                     {
+                                       possiblevalue=attr.possiblevalue,
                                         AttributeName = attr.AttributeName,
                                         AttributeValue = attr.AttributeValue,
-                                        variatn_id = variant.VariantId,
+                                        variatn_id = addvariant.ProductVariantId,
                                     };
                                     await Context.VariantAttributes.AddAsync(newvariantattribute);
                                 }
@@ -580,7 +640,7 @@ namespace e_comerce_api.services.reprosity
                     }
                 }
                 //if !hasvariant and product has variant
-              
+                
                 await Context.SaveChangesAsync();
                 await transaction.CommitAsync();
                 return true;
@@ -899,7 +959,105 @@ namespace e_comerce_api.services.reprosity
 
             return await getproductbyid(id, false);
         }
+        //Add a product attribute value
+        public async Task<productattributevalueresponse> addproductattributevalue(addproductattrvaluedto dto)
+        {
+            //check variant
+            var variant = await Context.ProductVariants.Include(v => v.attributes).
+               FirstOrDefaultAsync(v => v.ProductVariantId == dto.variantid);
+            if (variant == null)
+                throw new Exception("this variant is not found");
+            //check attribute
+            if (variant.attributes != null)
+            {
+                var attribute = Context.ProductAttributies.FirstOrDefault(v => v.ProductAttriid == dto.attributeid);
+                if (attribute == null)
+                    throw new Exception("this attribute is not found");
+                //check if attribute value is already exit
+                var exitvalue = await Context.ProductAttributeValues.
+                    FirstOrDefaultAsync(p => p.AttributeId == dto.attributeid
+                    && p.ProductId == dto.productid
+                );
+                if (exitvalue != null)
+                    throw new Exception($"{exitvalue} is already exit");
+                var newattributevalue = new ProductAttributiesValue {
+                    AttributeId = attribute.ProductAttriid,
+                    ProductId = variant.product_id,
+                    Value = dto.attributevalue,
+                };
+                await Context.ProductAttributeValues.AddAsync(newattributevalue);
+                await Context.SaveChangesAsync();
 
+             return new productattributevalueresponse {
+                    attributeid = attribute.ProductAttriid,
+                    attributename=attribute.AttributeName,
+                    attributevalue=newattributevalue.Value,
+                    productid=variant.product_id,
+                    variantid=variant.ProductVariantId,
+               };
+            }
+            else
+            {
+                throw new Exception("attribute is null") ;
+            }
+        }
+        // Update a product attribute value
+        public async Task UpdateProductAttributeValueAsync(int valueId,updateproductattributevaluedto attributeValueDto)
+        {
+            var attributeValue = await Context.ProductAttributeValues.FirstOrDefaultAsync(v=>
+            v.ProductId==attributeValueDto.productid&&
+               v.AttributeId==attributeValueDto.attributeid&&v.ProductAttrValueId==attributeValueDto.valueid
+            );
+
+            if (attributeValue == null)
+                throw new KeyNotFoundException($"Attribute value with ID {valueId} not found");
+
+            attributeValue.Value = attributeValueDto.value;
+            await Context.SaveChangesAsync();
+        }
+        //update product stock
+        public async Task<productresponsedto> updateproductstock(int productid,int stockquantity)
+        {
+            var product =await Context.Products.FindAsync(productid);
+
+            if (product == null)
+                throw new KeyNotFoundException($"Product with ID {productid} not found");
+
+            product.stockquantity = stockquantity;
+            product.updatedAt = DateTime.UtcNow;
+
+            // Update availability if approved
+            if (product.isaveliable==true) {
+
+                product.isaveliable = stockquantity > 0;
+            }
+
+            await Context.SaveChangesAsync();
+
+            return await getproductbyid(productid, false);
+        }
+        //updata variant stock
+        public async Task<productvariantresponsedto> UpdateVariantStockAsync(int variantId, int newStock)
+        {
+            var variant = await Context.ProductVariants
+                .Include(v => v.product)
+                .FirstOrDefaultAsync(v => v.ProductVariantId == variantId);
+
+            if (variant == null)
+                throw new KeyNotFoundException($"Variant with ID {variantId} not found");
+
+            variant.stockquantity = newStock;
+
+            // Update availability if product is approved
+            if (variant.isaveliable==true)
+            {
+                variant.isaveliable = newStock > 0;
+            }
+
+            await Context.SaveChangesAsync();
+
+            return mapproductvariant(variant);
+        }
         //map product variant
         public productvariantresponsedto mapproductvariant(productVariant variant)
         {
@@ -936,26 +1094,42 @@ namespace e_comerce_api.services.reprosity
             var discountAmount = basePrice * (discountPercentage.Value / 100);
             return Math.Round(basePrice - discountAmount, 2);
         }
+        public async Task<ProductImageDto> addimagetoproductimages(IFormFile dto, int productid)
+        {
+            var product = await Context.Products.FirstOrDefaultAsync(p=>p.ProductId==productid);
+            if (product == null)
+                throw new Exception("this product is not found");
+            int currentMaxOrder = product.ProductImage.Any()
+                         ? product.ProductImage.Max(pi => pi.DisplayOrder ?? 0)
+                         : 0;
+            var image = new ProductImage
+            {
+                DisplayOrder = ++currentMaxOrder,
+                ProductId = product.ProductId,
+               ImageUrl="",
+            };
+            if (dto != null)
+            {
+                var imageurl = await Imagesreprosity.saveimageurl(dto,EntityTyp.product,product.Name);
+                image.ImageUrl = imageurl;
+            }
+            //product.ProductImage.Add(image);
+            await  Context.ProductImages.AddAsync(image);
+            await Context.SaveChangesAsync();
+            var response =  new ProductImageDto { 
+              DisplayOrder=image.DisplayOrder,
+              ImageId=image.ImageId,
+              ImageUrl=image.ImageUrl,
+              ProductId=product.ProductId,
+            };
+            return response;    
+        }
+        public async Task<productresponsedto> getproducttoupdate(int productid)
+        {
+            var product = await Context.Products.FirstOrDefaultAsync(p=>p.ProductId==productid);
+            if (product == null)
+                throw new Exception("this product is not found");
+            return mapresponseproduct(product,false);
+        }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
- 

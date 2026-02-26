@@ -42,7 +42,7 @@ namespace e_comerce_api.DTO
         public string CategoryName { get; set; }
         public int RatingCount { get; set; }
         public int ReviewCount { get; set; }
-        public List<ProductImageDto> Images { get; set; }
+        public List<ProductImageDto> Images { get; set; } = new List<ProductImageDto>();
         public List<ProductVariantDto> Variants { get; set; }
         public List<ProductAttributeValueDto> AttributeValues { get; set; }
     }

@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using e_comerce_api.Enum;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace e_comerce_api.models
@@ -7,6 +8,7 @@ namespace e_comerce_api.models
     {
         [Key]
         public int Cartid {  get; set; }
+        public cartstatue statue { get; set; } = cartstatue.Open;
         public DateTime? createdAt { get; set; }
         public decimal totalAmount {  get; set; }
         public DateTime? updatedAt { get; set; }

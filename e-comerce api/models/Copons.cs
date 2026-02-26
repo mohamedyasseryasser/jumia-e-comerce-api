@@ -11,6 +11,7 @@ namespace e_comerce_api.models
         public string decription {  get; set; }
         public DateTime startAt { get; set; }
         public DateTime endAt { get; set; }
+        public string DiscountType {  get; set; }
         public int? UsageLimit { get; set; }
         public int? UsageCount { get; set; }
         public decimal? MinimumPurchase { get; set; }

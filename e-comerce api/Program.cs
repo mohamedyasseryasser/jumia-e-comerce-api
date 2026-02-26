@@ -3,6 +3,7 @@ using e_comerce_api.models;
 using e_comerce_api.services.interfaces;
 using e_comerce_api.services.reprosity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -110,6 +111,19 @@ namespace e_comerce_api
             builder.Services.AddScoped<Iimagesreprosity,Imagesreprosity>();
             builder.Services.AddScoped<IsubCategoryReprosity, SubCategoryReprosity>();
             builder.Services.AddScoped<Iproductreprosity, Productreprosity>();
+            builder.Services.AddScoped<Icartreprosity, cartreprosity>();
+            builder.Services.AddScoped<Iorderreprosity,orderreprosity>();
+            builder.Services.AddScoped<ICopounereprosity, Copounereprosity>();
+
+            var keysPath = Path.Combine(
+        builder.Environment.ContentRootPath,
+        "DataProtectionKeys");
+
+            builder.Services.AddDataProtection()
+                .PersistKeysToFileSystem(new DirectoryInfo(keysPath))
+                .SetApplicationName("ECommerceApi");
+
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.

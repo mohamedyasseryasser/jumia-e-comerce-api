@@ -13,13 +13,15 @@ namespace e_comerce_api.DTO
         public int StockQuantity { get; set; }
         public int SubcategoryId { get; set; }
         public int SellerId { get; set; }
+        public string ProductVariantsJson {  get; set; }
+        public string attributesvaluesjson {  get; set; }
         public IFormFile MainImageFile { get; set; }
-        public List<ProductImageInputDto> AdditionalImageFiles { get; set; }
+        public List<IFormFile> AdditionalImageFiles { get; set; }
         public bool HasVariants { get; set; }
         [JsonIgnore]
-        public List<CreateProductAttributeValueDto> AttributeValues { get; set; }
+        public List<CreateProductAttributeValueDto> AttributeValues { get; set; } = new List<CreateProductAttributeValueDto>();
         [JsonIgnore]
-        public List<UpdateProductBaseVariantDto> Variants { get; set; }
+        public List<UpdateProductBaseVariantDto> Variants { get; set; } = new List<UpdateProductBaseVariantDto>();
         public List<int> productimagedeleted { get; set; }
     }
     public class UpdateProductBaseVariantDto
@@ -34,7 +36,10 @@ namespace e_comerce_api.DTO
         public int StockQuantity { get; set; }
         public string Sku { get; set; }
         public bool IsDefault { get; set; }
-        public IFormFile VariantImage { get; set; }
+         public IFormFile VariantImage { get; set; }
+       // public string VariantImage { get; set; }
+
         public List<ProductVariantAttributeDto> VariantAttributes { get; set; }
     }
+    
 }

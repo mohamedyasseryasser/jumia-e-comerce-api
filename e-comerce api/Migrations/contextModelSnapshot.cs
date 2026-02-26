@@ -225,8 +225,14 @@ namespace e_comerce_api.Migrations
                     b.Property<int>("OrderId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("OrderItemsId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime?>("PaidAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<int?>("ProductId")
+                        .HasColumnType("int");
 
                     b.Property<int?>("Sellerid")
                         .HasColumnType("int");
@@ -236,6 +242,10 @@ namespace e_comerce_api.Migrations
                     b.HasIndex("AffiliateId");
 
                     b.HasIndex("OrderId");
+
+                    b.HasIndex("OrderItemsId");
+
+                    b.HasIndex("ProductId");
 
                     b.HasIndex("Sellerid");
 
@@ -335,6 +345,9 @@ namespace e_comerce_api.Migrations
                     b.Property<int?>("customer_id")
                         .HasColumnType("int");
 
+                    b.Property<int>("statue")
+                        .HasColumnType("int");
+
                     b.Property<decimal>("totalAmount")
                         .HasColumnType("decimal(18,2)");
 
@@ -392,6 +405,10 @@ namespace e_comerce_api.Migrations
 
                     b.Property<decimal?>("DiscountPercentage")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("DiscountType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal?>("MinimumPurchase")
                         .HasColumnType("decimal(18,2)");
@@ -509,21 +526,16 @@ namespace e_comerce_api.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("SubCategorySbuCatId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("product_id")
+                    b.Property<int>("subcatid")
                         .HasColumnType("int");
 
                     b.HasKey("ProductAttriid");
 
-                    b.HasIndex("SubCategorySbuCatId");
-
-                    b.HasIndex("product_id");
+                    b.HasIndex("subcatid");
 
                     b.ToTable("ProductAttributies");
                 });
@@ -536,13 +548,10 @@ namespace e_comerce_api.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProductAttrValueId"));
 
-                    b.Property<int?>("AttributeId")
+                    b.Property<int>("AttributeId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("ProductAttributiesProductAttriid")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("ProductId")
+                    b.Property<int>("ProductId")
                         .HasColumnType("int");
 
                     b.Property<string>("Value")
@@ -551,11 +560,36 @@ namespace e_comerce_api.Migrations
 
                     b.HasKey("ProductAttrValueId");
 
-                    b.HasIndex("ProductAttributiesProductAttriid");
+                    b.HasIndex("AttributeId");
 
                     b.HasIndex("ProductId");
 
                     b.ToTable("ProductAttributeValues");
+                });
+
+            modelBuilder.Entity("e_comerce_api.models.ProductImage", b =>
+                {
+                    b.Property<int>("ImageId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ImageId"));
+
+                    b.Property<int?>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ImageId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("ProductImages");
                 });
 
             modelBuilder.Entity("e_comerce_api.models.Rating", b =>
@@ -983,10 +1017,14 @@ namespace e_comerce_api.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Orderid"));
 
+                    b.Property<string>("AffiliateCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int?>("AffiliateId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("CoponsCoponId")
+                    b.Property<int?>("CouponId")
                         .HasColumnType("int");
 
                     b.Property<decimal?>("DiscountAmount")
@@ -1032,7 +1070,7 @@ namespace e_comerce_api.Migrations
 
                     b.HasIndex("AffiliateId");
 
-                    b.HasIndex("CoponsCoponId");
+                    b.HasIndex("CouponId");
 
                     b.HasIndex("address_id");
 
@@ -1049,12 +1087,15 @@ namespace e_comerce_api.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProductId"));
 
-                    b.Property<double?>("AverageRate")
+                    b.Property<double>("AverageRate")
                         .HasColumnType("float");
 
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("FinalPrice")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Mainimageurl")
                         .IsRequired()
@@ -1070,10 +1111,10 @@ namespace e_comerce_api.Migrations
                     b.Property<DateTime>("createdAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<decimal?>("discountpercentage")
+                    b.Property<decimal>("discountpercentage")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<bool?>("isaveliable")
+                    b.Property<bool>("isaveliable")
                         .HasColumnType("bit");
 
                     b.Property<int?>("seller_id")
@@ -1105,14 +1146,18 @@ namespace e_comerce_api.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProductVariantId"));
 
-                    b.Property<double?>("AverageRate")
-                        .HasColumnType("float");
-
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal>("FinalPrice")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<string>("Mainimageurl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SKU")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -1123,7 +1168,7 @@ namespace e_comerce_api.Migrations
                     b.Property<decimal>("basicprice")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal?>("discountpercentage")
+                    b.Property<decimal>("discountpercentage")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<bool?>("isaveliable")
@@ -1132,7 +1177,7 @@ namespace e_comerce_api.Migrations
                     b.Property<bool?>("isdefault")
                         .HasColumnType("bit");
 
-                    b.Property<int?>("product_id")
+                    b.Property<int>("product_id")
                         .HasColumnType("int");
 
                     b.Property<int>("stockquantity")
@@ -1161,15 +1206,16 @@ namespace e_comerce_api.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("ProductVariantId")
-                        .HasColumnType("int");
+                    b.Property<string>("possiblevalue")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("variatn_id")
                         .HasColumnType("int");
 
                     b.HasKey("ProductVariantAttrid");
 
-                    b.HasIndex("ProductVariantId");
+                    b.HasIndex("variatn_id");
 
                     b.ToTable("VariantAttributes");
                 });
@@ -1318,10 +1364,18 @@ namespace e_comerce_api.Migrations
                         .IsRequired();
 
                     b.HasOne("e_comerce_api.models.order", "order")
-                        .WithMany()
+                        .WithMany("AffiliateCommissions")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("e_comerce_api.models.OrderItems", null)
+                        .WithMany("AffiliateCommissions")
+                        .HasForeignKey("OrderItemsId");
+
+                    b.HasOne("e_comerce_api.models.product", null)
+                        .WithMany("AffiliateCommissions")
+                        .HasForeignKey("ProductId");
 
                     b.HasOne("e_comerce_api.models.seller", null)
                         .WithMany("AffiliateCommissions")
@@ -1365,7 +1419,7 @@ namespace e_comerce_api.Migrations
             modelBuilder.Entity("e_comerce_api.models.Cart", b =>
                 {
                     b.HasOne("e_comerce_api.models.customer", "customer")
-                        .WithMany()
+                        .WithMany("Carts")
                         .HasForeignKey("customer_id");
 
                     b.Navigation("customer");
@@ -1378,7 +1432,7 @@ namespace e_comerce_api.Migrations
                         .HasForeignKey("CartId");
 
                     b.HasOne("e_comerce_api.models.product", "Product")
-                        .WithMany()
+                        .WithMany("CartItems")
                         .HasForeignKey("ProductId");
 
                     b.HasOne("e_comerce_api.models.productVariant", "Variant")
@@ -1395,7 +1449,7 @@ namespace e_comerce_api.Migrations
             modelBuilder.Entity("e_comerce_api.models.HelpfulRating", b =>
                 {
                     b.HasOne("e_comerce_api.models.customer", "Customer")
-                        .WithMany()
+                        .WithMany("HelpfulRatings")
                         .HasForeignKey("CustomerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1414,7 +1468,7 @@ namespace e_comerce_api.Migrations
             modelBuilder.Entity("e_comerce_api.models.OrderItems", b =>
                 {
                     b.HasOne("e_comerce_api.models.product", "Product")
-                        .WithMany()
+                        .WithMany("OrderItems")
                         .HasForeignKey("product_id");
 
                     b.HasOne("e_comerce_api.models.SubOrder", "SubOrder")
@@ -1434,26 +1488,41 @@ namespace e_comerce_api.Migrations
 
             modelBuilder.Entity("e_comerce_api.models.ProductAttributies", b =>
                 {
-                    b.HasOne("e_comerce_api.models.SubCategory", null)
+                    b.HasOne("e_comerce_api.models.SubCategory", "SubCategory")
                         .WithMany("ProductAttributies")
-                        .HasForeignKey("SubCategorySbuCatId");
+                        .HasForeignKey("subcatid")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.HasOne("e_comerce_api.models.product", "product")
-                        .WithMany("ProductAttributies")
-                        .HasForeignKey("product_id");
-
-                    b.Navigation("product");
+                    b.Navigation("SubCategory");
                 });
 
             modelBuilder.Entity("e_comerce_api.models.ProductAttributiesValue", b =>
                 {
-                    b.HasOne("e_comerce_api.models.ProductAttributies", null)
+                    b.HasOne("e_comerce_api.models.ProductAttributies", "Attribute")
                         .WithMany("productAttributiesValues")
-                        .HasForeignKey("ProductAttributiesProductAttriid");
+                        .HasForeignKey("AttributeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("e_comerce_api.models.product", "Product")
-                        .WithMany()
-                        .HasForeignKey("ProductId");
+                        .WithMany("ProductAttributeValues")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Attribute");
+
+                    b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("e_comerce_api.models.ProductImage", b =>
+                {
+                    b.HasOne("e_comerce_api.models.product", "Product")
+                        .WithMany("ProductImage")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Product");
                 });
@@ -1461,7 +1530,7 @@ namespace e_comerce_api.Migrations
             modelBuilder.Entity("e_comerce_api.models.Rating", b =>
                 {
                     b.HasOne("e_comerce_api.models.customer", "customer")
-                        .WithMany()
+                        .WithMany("Ratings")
                         .HasForeignKey("customerid")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1521,7 +1590,7 @@ namespace e_comerce_api.Migrations
                         .IsRequired();
 
                     b.HasOne("e_comerce_api.models.customer", "customer")
-                        .WithMany()
+                        .WithMany("UserCoupons")
                         .HasForeignKey("customer_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1534,7 +1603,7 @@ namespace e_comerce_api.Migrations
             modelBuilder.Entity("e_comerce_api.models.WishList", b =>
                 {
                     b.HasOne("e_comerce_api.models.customer", "Customer")
-                        .WithMany()
+                        .WithMany("Wishlists")
                         .HasForeignKey("CustomerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1545,7 +1614,7 @@ namespace e_comerce_api.Migrations
             modelBuilder.Entity("e_comerce_api.models.WithItems", b =>
                 {
                     b.HasOne("e_comerce_api.models.product", "Product")
-                        .WithMany()
+                        .WithMany("WishlistItems")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1590,13 +1659,13 @@ namespace e_comerce_api.Migrations
 
             modelBuilder.Entity("e_comerce_api.models.order", b =>
                 {
-                    b.HasOne("e_comerce_api.models.Affiliate", null)
+                    b.HasOne("e_comerce_api.models.Affiliate", "Affiliate")
                         .WithMany("orders")
                         .HasForeignKey("AffiliateId");
 
-                    b.HasOne("e_comerce_api.models.Copons", null)
+                    b.HasOne("e_comerce_api.models.Copons", "Coupon")
                         .WithMany("orders")
-                        .HasForeignKey("CoponsCoponId");
+                        .HasForeignKey("CouponId");
 
                     b.HasOne("e_comerce_api.models.address", "Address")
                         .WithMany("Orders")
@@ -1607,6 +1676,10 @@ namespace e_comerce_api.Migrations
                         .HasForeignKey("customer_id");
 
                     b.Navigation("Address");
+
+                    b.Navigation("Affiliate");
+
+                    b.Navigation("Coupon");
 
                     b.Navigation("customer");
                 });
@@ -1630,7 +1703,9 @@ namespace e_comerce_api.Migrations
                 {
                     b.HasOne("e_comerce_api.models.product", "product")
                         .WithMany("productVariants")
-                        .HasForeignKey("product_id");
+                        .HasForeignKey("product_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("product");
                 });
@@ -1639,7 +1714,8 @@ namespace e_comerce_api.Migrations
                 {
                     b.HasOne("e_comerce_api.models.productVariant", "productVariant")
                         .WithMany("attributes")
-                        .HasForeignKey("ProductVariantId");
+                        .HasForeignKey("variatn_id")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("productVariant");
                 });
@@ -1647,11 +1723,11 @@ namespace e_comerce_api.Migrations
             modelBuilder.Entity("e_comerce_api.models.productview", b =>
                 {
                     b.HasOne("e_comerce_api.models.customer", "Customer")
-                        .WithMany()
+                        .WithMany("ProductViews")
                         .HasForeignKey("CustomerId");
 
                     b.HasOne("e_comerce_api.models.product", "Product")
-                        .WithMany()
+                        .WithMany("ProductViews")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1691,6 +1767,11 @@ namespace e_comerce_api.Migrations
                     b.Navigation("orders");
 
                     b.Navigation("users");
+                });
+
+            modelBuilder.Entity("e_comerce_api.models.OrderItems", b =>
+                {
+                    b.Navigation("AffiliateCommissions");
                 });
 
             modelBuilder.Entity("e_comerce_api.models.ProductAttributies", b =>
@@ -1739,17 +1820,43 @@ namespace e_comerce_api.Migrations
 
             modelBuilder.Entity("e_comerce_api.models.customer", b =>
                 {
+                    b.Navigation("Carts");
+
+                    b.Navigation("HelpfulRatings");
+
+                    b.Navigation("ProductViews");
+
+                    b.Navigation("Ratings");
+
+                    b.Navigation("UserCoupons");
+
+                    b.Navigation("Wishlists");
+
                     b.Navigation("orders");
                 });
 
             modelBuilder.Entity("e_comerce_api.models.order", b =>
                 {
+                    b.Navigation("AffiliateCommissions");
+
                     b.Navigation("SubOrders");
                 });
 
             modelBuilder.Entity("e_comerce_api.models.product", b =>
                 {
-                    b.Navigation("ProductAttributies");
+                    b.Navigation("AffiliateCommissions");
+
+                    b.Navigation("CartItems");
+
+                    b.Navigation("OrderItems");
+
+                    b.Navigation("ProductAttributeValues");
+
+                    b.Navigation("ProductImage");
+
+                    b.Navigation("ProductViews");
+
+                    b.Navigation("WishlistItems");
 
                     b.Navigation("productVariants");
 

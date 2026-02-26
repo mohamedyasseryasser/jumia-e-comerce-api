@@ -19,5 +19,7 @@ namespace e_comerce_api.models
         [ForeignKey("ProductVariant")]
         public int? variant_id {  get; set; }
         public productVariant? ProductVariant { get; set; }
+        public virtual ICollection<AffiliateComession> AffiliateCommissions { get; set; } = new List<AffiliateComession>();
+
     }
 }

@@ -20,7 +20,7 @@ namespace e_comerce_api.models
         public bool? isaveliable { get; set; }
         [ForeignKey("product")]
         public int product_id { get; set; }
-        public product product { get; set; }
+        public product? product { get; set; }
        public ICollection<productVariantAttribute>? attributes { get; set; }=new List<productVariantAttribute>();
     }
 }
