@@ -1,6 +1,7 @@
 ﻿using e_comerce_api.DTO;
 using e_comerce_api.DTO.couponsdto;
 using e_comerce_api.services.interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
@@ -9,6 +10,7 @@ namespace e_comerce_api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class CouponsController : ControllerBase
     {
         public CouponsController(ICopounereprosity copounereprosity)

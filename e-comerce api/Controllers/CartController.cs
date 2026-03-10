@@ -3,6 +3,7 @@ using e_comerce_api.DTO.cartdto;
 using e_comerce_api.models;
 using e_comerce_api.services.interfaces;
 using e_comerce_api.services.reprosity;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -12,6 +13,7 @@ namespace e_comerce_api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class CartController : ControllerBase
     {
         public CartController(Icartreprosity icartreprosity) {
