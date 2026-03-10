@@ -14,7 +14,6 @@ namespace e_comerce_api.services.reprosity
         {
             Context = context;
         }
-
         public context Context { get; }
         public async Task<couponresponsedto> createcopoune(createcouponinputdto dto)
         {
@@ -22,7 +21,7 @@ namespace e_comerce_api.services.reprosity
             try
             {
                 //validate coupon
-                if (!await Context.Coupons.AnyAsync(c=>c.code==dto.Code))
+                if (await Context.Coupons.AnyAsync(c=>c.code==dto.Code))
                 {
                     throw new InvalidExpressionException($"this coupoun code {dto.Code} is already exit");
                 }
@@ -184,7 +183,6 @@ namespace e_comerce_api.services.reprosity
                  throw;
             }
         }
-
         public async Task<couponresponsedto> GetCouponByCodeAsync(string code)
         {
             try
@@ -246,7 +244,12 @@ namespace e_comerce_api.services.reprosity
                 throw new Exception("Error while mapping coupon", ex);
             }
         }
+        public async Task<bool> codecouponeexit(string code)
+        {
+            var coupon = await Context.Coupons
+      .FirstOrDefaultAsync(c => c.code == code);
 
+            return coupon != null;
+        }
     }
-    
 }

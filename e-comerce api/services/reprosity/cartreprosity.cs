@@ -10,7 +10,8 @@ namespace e_comerce_api.services.reprosity
 {
     public class cartreprosity:Icartreprosity
     {
-        public cartreprosity(context context) {
+        public cartreprosity(context context)
+        {
             Context = context;
         }
         public context Context { get; }
@@ -119,13 +120,13 @@ namespace e_comerce_api.services.reprosity
             }
         }
         //add cartitems
-        public async Task<CartItemDto> addcartitems(string userid, cartiteminputdto dto)
+        public async Task<CartItemDto> addcartitems(string userid,cartiteminputdto dto)
         {
             using var transaction = await Context.Database.BeginTransactionAsync();
             try
             {
                 //verfication from userid
-                var customerid = getcustomerid(userid);
+                var customerid = getcustomerid(userid.ToString());
                 if (customerid == 0)
                 {
                     throw new Exception("not found");
@@ -255,11 +256,15 @@ namespace e_comerce_api.services.reprosity
                 {
                     throw new Exception("this customer is not found");
                 }
-                var cartitem = await Context.CartItems.
-                    Include(c=>c.Cart)
-                    .Include(c=>c.ProductId)
-                    .Include(c=>c.Variant).
-                    FirstOrDefaultAsync(c=>c.CartItemsId==dto.cartitem&&c.Cart.statue==cartstatue.Open);
+                var cartss = await Context.CartItems.FirstOrDefaultAsync(c=>c.CartItemsId==dto.cartitem);
+                var cartitem = await Context.CartItems
+                          .Include(c => c.Cart)
+                           .Include(c => c.Product)
+                           .Include(c => c.Variant)
+                            .FirstOrDefaultAsync(c =>
+                             c.CartItemsId == dto.cartitem &&
+                              c.Cart != null &&
+                             c.Cart.statue == cartstatue.Open);
                 if (cartitem == null)
                 {
                     throw new Exception("this cartitem is not found");
@@ -315,7 +320,6 @@ namespace e_comerce_api.services.reprosity
         public async Task<bool> removecartitem(string userid, int cartitemid)
         {
             using var transaction = await Context.Database.BeginTransactionAsync();
-
             try
             {
                 var customerid = getcustomerid(userid);

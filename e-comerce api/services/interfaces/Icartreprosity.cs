@@ -6,6 +6,7 @@ namespace e_comerce_api.services.interfaces
 {
     public interface Icartreprosity
     {
+        public int getcustomerid(string userid);
         Task<cartdto> getcartbycustomerid(int customerid, bool isincludeitems = true);
         
         Task<CartItemDto> getcartitembyid(int cartitemid);
